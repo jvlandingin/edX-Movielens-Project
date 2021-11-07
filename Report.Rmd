@@ -99,7 +99,8 @@ mu
 ```
 To test this model with just the average, we use the following code:
 ```{r}
-RMSE(test_set$rating, mu)
+rmse_average <- RMSE(test_set$rating, mu)
+rmse_average
 ```
 
 To improve our initial model with just the average, we check the distribution of the residuals of the predicted ratings of the model we have so far with the different biases/effects. This is so we can visualize if there is a universal pattern for each bias that we can find wherein we could fit our model to predict ratings. We do this step by step after each additional bias/effect added to the model.
@@ -123,7 +124,8 @@ pred <- test_set %>%
   mutate(pred = mu + b_i) %>%
   .$pred
 
-RMSE(pred, test_set$rating)
+rmse_m <- RMSE(pred, test_set$rating)
+rmse_m
 ```
 
 The model would look like the following:
@@ -134,8 +136,8 @@ where $b_i$ represents average ranking for movie $i$
 
 So far, below are our models and their RMSEs. 
 ```{r echo=FALSE}
-data.frame(method = "Just the average", RMSE = 1.060503) %>%
-  bind_rows(data.frame(method = "Movie Effect Model", RMSE = 0.9435731))
+data.frame(method = "Just the average", RMSE = rmse_average) %>%
+  bind_rows(data.frame(method = "Movie Effect Model", RMSE = rmse_m))
 ```
 
 
@@ -159,7 +161,8 @@ pred <- test_set %>%
   mutate(pred = mu + b_i + b_u) %>%
   .$pred
 
-RMSE(pred, test_set$rating)
+rmse_mu <- RMSE(pred, test_set$rating)
+rmse_mu 
 ```
 
 The model would look like the following:
@@ -170,9 +173,9 @@ where $b_u$ represents a user-specific effect
 
 So far, below are our models and their RMSEs. 
 ```{r echo=FALSE}
-data.frame(method = "Just the average", RMSE = 1.060503) %>%
-  bind_rows(data.frame(method = "Movie Effect Model", RMSE = 0.9435731)) %>%
-  bind_rows(data.frame(method = "Movie + User Effect Model", RMSE = 0.8653122))
+data.frame(method = "Just the average", RMSE = rmse_average) %>%
+  bind_rows(data.frame(method = "Movie Effect Model", RMSE = rmse_m)) %>%
+  bind_rows(data.frame(method = "Movie + User Effect Model", RMSE = rmse_mu))
 ```
 ## 3. Genre effect  
 Below are all the genres in the edx set and their frequencies.
@@ -319,7 +322,7 @@ drama_effect  <- train_set %>%
 ```
 We continue the above code by adding the rest of the genres one by one.
 
-```{r Initial genres effect, eval=FALSE, echo=FALSE}
+```{r Initial genres effect, include=FALSE}
 comedy_effect <- train_set %>% 
   left_join(movie_effect, by = 'movieId') %>%
   left_join(user_effect, by = 'userId') %>%
@@ -847,7 +850,7 @@ imax_effect <- train_set %>%
 
 We check the RMSE of the new model with genre effect with the following code:
 
-```{r eval = F, echo = T}
+```{r include=FALSE}
 pred <- test_set %>% 
   left_join(movie_effect, by = 'movieId') %>%
   left_join(user_effect, by = 'userId') %>%
@@ -896,17 +899,18 @@ pred <- test_set %>%
   ) %>%
   .$newpred
 
-RMSE(pred, test_set$rating)
+rmse_mug <- RMSE(pred, test_set$rating)
+rmse_mug
 ```
-Upon completing and running the code, it can be observed that the RMSE for the model with the added genre effect is 0.8757116.
+Upon completing and running the code, it can be observed that the RMSE for the model with the added genre effect is `r round(rmse_mug,4)`.
 
 Below are the RMSEs of all the models so far:
 
 ```{r echo=FALSE}
-data.frame(method = "Just the average", RMSE = 1.060503) %>%
-  bind_rows(data.frame(method = "Movie Effect Model", RMSE = 0.9435731)) %>%
-  bind_rows(data.frame(method = "Movie + User Effect Model", RMSE = 0.8653122)) %>%
-  bind_rows(data.frame(method = "Movie + User + Genre Effect Model", RMSE = 0.8757116))
+data.frame(method = "Just the average", RMSE = rmse_average) %>%
+  bind_rows(data.frame(method = "Movie Effect Model", RMSE = rmse_m)) %>%
+  bind_rows(data.frame(method = "Movie + User Effect Model", RMSE = rmse_mu)) %>%
+  bind_rows(data.frame(method = "Movie + User + Genre Effect Model", RMSE = rmse_mug))
 ```
 
 The RMSE for Movie + User + Genre Effect Model is higher than our previous model. This may be due to some users having only rated a certain genre a few times. These would result in noisy estimates that we should not trust, and may result in overfitting. Thus, we perform regularization with our current model. During the process, we also include the movie effect and user effect.
@@ -1542,17 +1546,18 @@ pred <- test_set %>%
   ) %>%
     .$pred
   
-  RMSE(pred, test_set$rating)
+  rmse_Rmug <- RMSE(pred, test_set$rating)
+  rmse_Rmug
 ```
-Upon running the above code, it can be observed that the RMSE for the model with the new genre effect is 0.8461327.
+
 
 The new model that includes genre effect is now better than the previous models.
 ```{r echo=FALSE}
-data.frame(method = "Just the average", RMSE = 1.060503) %>%
-  bind_rows(data.frame(method = "Movie Effect Model", RMSE = 0.9435731)) %>%
-  bind_rows(data.frame(method = "Movie + User Effect Model", RMSE = 0.8653122)) %>%
-  bind_rows(data.frame(method = "Movie + User + Genre Effect Model", RMSE = 0.8757116)) %>%
-  bind_rows(data.frame(method = "Regularized Movie-User-Genre Effect Model", RMSE = 0.8461327))
+data.frame(method = "Just the average", RMSE = rmse_average) %>%
+  bind_rows(data.frame(method = "Movie Effect Model", RMSE = rmse_m)) %>%
+  bind_rows(data.frame(method = "Movie + User Effect Model", RMSE = rmse_mu)) %>%
+  bind_rows(data.frame(method = "Movie + User + Genre Effect Model", RMSE = rmse_mug)) %>%
+  bind_rows(data.frame(method = "Regularized Movie-User-Genre Effect Model", RMSE = rmse_Rmug))
 ```
 
 
@@ -1746,16 +1751,17 @@ pred <- test_set %>%
   mutate(newpred = newpred + knn) %>%
   .$newpred
 
-RMSE(pred, test_set$rating)
+rmse_Rmug_my <- RMSE(pred, test_set$rating)
+rmse_Rmug_my
 ```
 The new model that includes movie year effect is now better than the previous models.
 ```{r echo=FALSE}
-data.frame(method = "Just the average", RMSE = 1.060503) %>%
-  bind_rows(data.frame(method = "Movie Effect Model", RMSE = 0.9435731)) %>%
-  bind_rows(data.frame(method = "Movie + User Effect Model", RMSE = 0.8653122)) %>%
-  bind_rows(data.frame(method = "Movie + User + Genre Effect Model", RMSE = 0.8757116)) %>%
-  bind_rows(data.frame(method = "Regularized Movie-User-Genre Effect Model", RMSE = 0.8461327)) %>%
-  bind_rows(data.frame(method = "Movie Year + Regularized Movie-User-Genre Effect Model", RMSE = 0.8459691))
+data.frame(method = "Just the average", RMSE = rmse_average) %>%
+  bind_rows(data.frame(method = "Movie Effect Model", RMSE = rmse_m)) %>%
+  bind_rows(data.frame(method = "Movie + User Effect Model", RMSE = rmse_mu)) %>%
+  bind_rows(data.frame(method = "Movie + User + Genre Effect Model", RMSE = rmse_mug)) %>%
+  bind_rows(data.frame(method = "Regularized Movie-User-Genre Effect Model", RMSE = rmse_Rmug)) %>%
+  bind_rows(data.frame(method = "Movie Year + Regularized Movie-User-Genre Effect Model", RMSE = rmse_Rmug_my))
 ```
 
 
@@ -1814,9 +1820,10 @@ pred <- validation %>%
   mutate(newpred = newpred + knn) %>%
   .$newpred
 
-RMSE(pred, validation$rating)
+rmse_val <- RMSE(pred, validation$rating)
+rmse_val
 ```
-The RMSE of our model to the validation set is 0.8463794.
+The RMSE of our model to the validation set is `r round(rmse_val,4)`.
 
 # IV. Conclusion  
-Using the 10M version of the MovieLens dataset, we were able to create a movie recommendation system. The effects/biases that were used for the algorithm was the user effect, movie effect, genre effect, and year movie released effect. Regularization was done on the user effect, movie effect, and genre effect to avoid noisy estimates and overfitting. All training and model comparisons was done solely on the edx set. The validation set was used in the end to check the RMSE of the final model. The final RMSE of our model to the validation set is 0.8464. The model may possibly be improved if principal component analysis could be utilized to detect potential structures from the data to fit the model into.
+Using the 10M version of the MovieLens dataset, we were able to create a movie recommendation system. The effects/biases that were used for the algorithm was the user effect, movie effect, genre effect, and year movie released effect. Regularization was done on the user effect, movie effect, and genre effect to avoid noisy estimates and overfitting. All training and model comparisons was done solely on the edx set. The validation set was used in the end to check the RMSE of the final model. The final RMSE of our model to the validation set is `r round(rmse_val,4)`. The model may possibly be improved if principal component analysis could be utilized to detect potential structures from the data to fit the model into.
